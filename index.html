@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mappa per la Festa</title>
+    <title>Mappa Interattiva per la Festa</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 20px;
@@ -34,27 +38,10 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
             position: relative;
             overflow: hidden;
-        }
-        
-        .map-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,107,107,0.05) 10deg, transparent 20deg);
-            animation: rotate 30s linear infinite;
-            pointer-events: none;
-        }
-        
-        .map-content {
-            position: relative;
-            z-index: 2;
         }
         
         .destination {
@@ -70,21 +57,56 @@
             animation: pulse 3s infinite;
         }
         
-        .step {
-            display: flex;
-            align-items: center;
+        .progress-bar {
+            background: #e9ecef;
+            height: 8px;
+            border-radius: 4px;
             margin: 20px 0;
-            padding: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48cae4, #06d6a0);
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .step {
+            display: block;
+            margin: 20px 0;
+            padding: 20px;
             border-radius: 15px;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-left: 5px solid #48cae4;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .step.active {
+            border-left-color: #06d6a0;
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            transform: translateX(10px);
+        }
+        
+        .step.completed {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
         }
         
         .step:hover {
-            transform: translateY(-3px);
+            transform: translateY(-3px) translateX(5px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
         }
         
         .step-number {
@@ -101,10 +123,25 @@
             flex-shrink: 0;
             font-size: 1.1em;
             box-shadow: 0 3px 8px rgba(72,202,228,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .step.completed .step-number {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .step.active .step-number {
+            animation: pulse-active 1.5s infinite;
+        }
+        
+        .step-title {
+            flex: 1;
+            font-weight: bold;
+            font-size: 1.1em;
         }
         
         .step-content {
-            flex: 1;
+            padding-left: 60px;
         }
         
         .highlight {
@@ -129,66 +166,141 @@
             box-shadow: 0 3px 8px rgba(255,107,107,0.4);
         }
         
-        .visual-map {
-            margin: 30px 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-            border-radius: 15px;
-            border: 3px dashed #48cae4;
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            border: 2px dashed #48cae4;
         }
         
-        .road {
+        .photo-placeholder {
+            height: 120px;
+            background: linear-gradient(45deg, #e9ecef, #f8f9fa);
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            margin: 15px 0;
-            position: relative;
-        }
-        
-        .road-line {
-            height: 4px;
-            background: linear-gradient(90deg, #48cae4, #06d6a0);
-            border-radius: 2px;
-            flex: 1;
-            margin: 0 10px;
+            justify-content: center;
+            font-size: 2em;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+            cursor: pointer;
             position: relative;
             overflow: hidden;
         }
         
-        .road-line::after {
+        .photo-placeholder:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .photo-placeholder::after {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-            animation: shine 2s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: photo-shine 3s infinite;
         }
         
-        .point {
-            background: #ff6b6b;
+        .interactive-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #48cae4, #06d6a0);
             color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
             font-weight: bold;
-            white-space: nowrap;
-            box-shadow: 0 3px 8px rgba(255,107,107,0.3);
-            animation: glow 2s infinite alternate;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(72,202,228,0.3);
         }
         
-        .final-point {
-            background: linear-gradient(135deg, #06d6a0, #48cae4) !important;
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72,202,228,0.4);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .gps-simulation {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #48cae4;
+        }
+        
+        .gps-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #48cae4;
+            margin-bottom: 15px;
+        }
+        
+        .gps-dot {
+            width: 12px;
+            height: 12px;
+            background: #48cae4;
+            border-radius: 50%;
+            animation: gps-pulse 2s infinite;
+        }
+        
+        .distance-info {
+            text-align: center;
             font-size: 1.1em;
-            padding: 12px 20px;
-            animation: party 1.5s infinite;
+            color: #666;
         }
         
-        .party-emoji {
-            font-size: 2em;
-            display: inline-block;
-            animation: spin 3s linear infinite;
-            margin: 0 10px;
+        .tips-section {
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .tips-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tip-item {
+            margin: 8px 0;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .weather-widget {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
         }
         
         .footer {
@@ -196,6 +308,39 @@
             margin-top: 20px;
             color: #666;
             font-style: italic;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
         }
         
         @keyframes bounce {
@@ -210,30 +355,25 @@
             100% { transform: scale(1); }
         }
         
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        @keyframes pulse-active {
+            0% { transform: scale(1); box-shadow: 0 3px 8px rgba(72,202,228,0.3); }
+            50% { transform: scale(1.1); box-shadow: 0 5px 15px rgba(72,202,228,0.6); }
+            100% { transform: scale(1); box-shadow: 0 3px 8px rgba(72,202,228,0.3); }
         }
         
-        @keyframes shine {
+        @keyframes photo-shine {
             0% { left: -100%; }
             100% { left: 100%; }
         }
         
-        @keyframes glow {
-            from { box-shadow: 0 3px 8px rgba(255,107,107,0.3); }
-            to { box-shadow: 0 5px 15px rgba(255,107,107,0.6); }
+        @keyframes gps-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
         
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        @keyframes party {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.1) rotate(-2deg); }
-            75% { transform: scale(1.1) rotate(2deg); }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         @media (max-width: 600px) {
@@ -246,105 +386,356 @@
                 font-size: 2em;
             }
             
-            .step {
+            .step-content {
+                padding-left: 0;
+                margin-top: 10px;
+            }
+            
+            .step-header {
                 flex-direction: column;
-                text-align: center;
+                align-items: flex-start;
             }
             
             .step-number {
                 margin-right: 0;
                 margin-bottom: 10px;
             }
+            
+            .photo-gallery {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎉 Invito alla Festa! 🎈</h1>
+        <h1>🎉 Mappa Interattiva per la Festa! 🎈</h1>
         <p>Tor San Lorenzo Marina di Ardea</p>
     </div>
     
     <div class="map-container">
-        <div class="map-content">
-            <div class="destination">
-                <span class="party-emoji">🎯</span>
-                <strong>DESTINAZIONE: Via delle Rondini 170</strong>
-                <span class="party-emoji">🎯</span>
+        <div class="destination">
+            <span style="font-size: 1.5em;">🎯</span>
+            <strong>DESTINAZIONE: Via delle Rondini 170</strong>
+            <span style="font-size: 1.5em;">🎯</span>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="interactive-controls">
+            <button class="control-btn" onclick="startGuidedTour()">🚗 Inizia Navigazione</button>
+            <button class="control-btn" onclick="resetProgress()">🔄 Reset</button>
+            <button class="control-btn" onclick="showAllPhotos()">📸 Vedi Foto</button>
+            <button class="control-btn" onclick="getDirections()">🗺️ Google Maps</button>
+        </div>
+        
+        <div class="gps-simulation" id="gpsStatus" style="display: none;">
+            <div class="gps-status">
+                <div class="gps-dot"></div>
+                <span>GPS Attivo - Ti stiamo guidando!</span>
             </div>
-            
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    Arrivate al <span class="highlight">lungomare Tor San Lorenzo</span>, 
-                    in direzione di <span class="highlight">Via delle Tortore</span>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    All'inizio di <span class="highlight">Via delle Tortore</span>, troverete:<br>
-                    <span class="landmark">📋 CARTELLONE ENORME "ROMA" (stabilimento)</span>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    Scendete da quella via e troverete:<br>
-                    <span class="highlight">🚪 Cancellone</span> → <span class="highlight">🚧 Sbarra</span>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    Superato il cancello e la sbarra:<br>
-                    <span class="highlight">⬅️ Prendete la PRIMA strada a SINISTRA</span>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                    Continuate dritto fino a:<br>
-                    <span class="highlight">🏠 Via delle Rondini 170</span>
-                </div>
-            </div>
-            
-            <div class="visual-map">
-                <h3 style="text-align: center; color: #48cae4; margin-top: 0;">📍 Percorso Visuale</h3>
-                
-                <div class="road">
-                    <div class="point">🌊 Lungomare</div>
-                    <div class="road-line"></div>
-                    <div class="point">🛣️ Via delle Tortore</div>
-                </div>
-                
-                <div class="road">
-                    <div class="point">📋 Cartellone "ROMA"</div>
-                    <div class="road-line"></div>
-                    <div class="point">🚪 Cancellone</div>
-                </div>
-                
-                <div class="road">
-                    <div class="point">🚧 Sbarra</div>
-                    <div class="road-line"></div>
-                    <div class="point">⬅️ Prima a Sinistra</div>
-                </div>
-                
-                <div class="road">
-                    <div class="point">➡️ Dritto</div>
-                    <div class="road-line"></div>
-                    <div class="point final-point">🎉 Via delle Rondini 170 🎊</div>
-                </div>
-            </div>
-            
-            <div class="footer">
-                <p><strong>🥳 Non vediamo l'ora di festeggiare con voi! 🎈</strong></p>
-                <p>💝 Seguite le indicazioni e ci vediamo alla festa! 💝</p>
+            <div class="distance-info" id="distanceInfo">
+                Preparati a partire...
             </div>
         </div>
+        
+        <div class="weather-widget">
+            <div style="font-size: 1.2em; margin-bottom: 5px;">🌤️ Tempo oggi</div>
+            <div>Ideale per la festa! ☀️ 22°C</div>
+        </div>
+        
+        <div class="step" data-step="1" onclick="activateStep(1)">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Lungomare Tor San Lorenzo</div>
+            </div>
+            <div class="step-content">
+                Arrivate al <span class="highlight">lungomare Tor San Lorenzo</span>, 
+                in direzione di <span class="highlight">Via delle Tortore</span>
+                
+                <div class="photo-gallery">
+                    <div class="photo-placeholder" onclick="showPhoto('lungomare')">
+                        🌊<br><small>Lungomare</small>
+                    </div>
+                    <div class="photo-placeholder" onclick="showPhoto('via-tortore')">
+                        🛣️<br><small>Via Tortore</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step" data-step="2" onclick="activateStep(2)">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Cerca il Cartellone "ROMA"</div>
+            </div>
+            <div class="step-content">
+                All'inizio di <span class="highlight">Via delle Tortore</span>, troverete:<br>
+                <span class="landmark">📋 CARTELLONE ENORME "ROMA" (stabilimento)</span>
+                
+                <div class="photo-gallery">
+                    <div class="photo-placeholder" onclick="showPhoto('cartellone')">
+                        📋<br><small>Cartellone ROMA</small>
+                    </div>
+                    <div class="photo-placeholder" onclick="showPhoto('stabilimento')">
+                        🏖️<br><small>Stabilimento</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step" data-step="3" onclick="activateStep(3)">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Cancellone e Sbarra</div>
+            </div>
+            <div class="step-content">
+                Scendete da quella via e troverete:<br>
+                <span class="highlight">🚪 Cancellone</span> → <span class="highlight">🚧 Sbarra</span>
+                
+                <div class="photo-gallery">
+                    <div class="photo-placeholder" onclick="showPhoto('cancellone')">
+                        🚪<br><small>Cancellone</small>
+                    </div>
+                    <div class="photo-placeholder" onclick="showPhoto('sbarra')">
+                        🚧<br><small>Sbarra</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step" data-step="4" onclick="activateStep(4)">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Prima a Sinistra!</div>
+            </div>
+            <div class="step-content">
+                Superato il cancello e la sbarra:<br>
+                <span class="highlight">⬅️ Prendete la PRIMA strada a SINISTRA</span>
+                
+                <div class="photo-gallery">
+                    <div class="photo-placeholder" onclick="showPhoto('bivio')">
+                        ↗️<br><small>Il Bivio</small>
+                    </div>
+                    <div class="photo-placeholder" onclick="showPhoto('strada-sinistra')">
+                        ⬅️<br><small>Strada a Sx</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step" data-step="5" onclick="activateStep(5)">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">Arrivo! 🎉</div>
+            </div>
+            <div class="step-content">
+                Continuate dritto fino a:<br>
+                <span class="highlight">🏠 Via delle Rondini 170</span>
+                
+                <div class="photo-gallery">
+                    <div class="photo-placeholder" onclick="showPhoto('via-rondini')">
+                        🏠<br><small>Via Rondini</small>
+                    </div>
+                    <div class="photo-placeholder" onclick="showPhoto('casa-festa')">
+                        🎉<br><small>Casa Festa!</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tips-section">
+            <div class="tips-title">
+                💡 Consigli Utili
+            </div>
+            <div class="tip-item">🚗 Parcheggiate con attenzione vicino alle case</div>
+            <div class="tip-item">📱 Salvate questo numero: 340-XXX-XXXX</div>
+            <div class="tip-item">🕒 La festa inizia alle 20:00</div>
+            <div class="tip-item">🎁 Non dimenticate il regalo!</div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>🥳 Non vediamo l'ora di festeggiare con voi! 🎈</strong></p>
+            <p>💝 Seguite le indicazioni e ci vediamo alla festa! 💝</p>
+        </div>
     </div>
+    
+    <!-- Modal per le foto -->
+    <div id="photoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="photoContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 0;
+        let guidedMode = false;
+        
+        const stepDescriptions = [
+            "Preparati a partire!",
+            "Dirigiti verso il lungomare Tor San Lorenzo",
+            "Cerca il grande cartellone 'ROMA'",
+            "Attraversa cancellone e sbarra",
+            "Prendi la prima a sinistra",
+            "Sei arrivato! 🎉 Via delle Rondini 170"
+        ];
+        
+        const photoDescriptions = {
+            'lungomare': '🌊 Lungomare Tor San Lorenzo\n\nQuesto è il punto di partenza! Cerca le indicazioni per Via delle Tortore lungo questa strada costiera.',
+            'via-tortore': '🛣️ Via delle Tortore\n\nEcco dove dovete dirigervi dal lungomare. All\'inizio di questa via troverete il cartellone.',
+            'cartellone': '📋 Cartellone "ROMA"\n\nQuesto è il grande cartellone dello stabilimento "ROMA" che dovete cercare. È impossibile non vederlo!',
+            'stabilimento': '🏖️ Stabilimento Balneare\n\nLo stabilimento si trova proprio accanto al cartellone. Da qui dovete scendere verso il cancellone.',
+            'cancellone': '🚪 Il Cancellone\n\nPrimo ostacolo: questo cancellone. Probabilmente sarà aperto durante l\'orario della festa.',
+            'sbarra': '🚧 La Sbarra\n\nDopo il cancellone troverete questa sbarra. Una volta superata, cercate la prima strada a sinistra!',
+            'bivio': '↗️ Il Bivio Importante\n\nEcco il punto cruciale: dopo cancello e sbarra, questo è il bivio dove dovete girare a sinistra.',
+            'strada-sinistra': '⬅️ Prima Strada a Sinistra\n\nQuesta è la strada che dovete imboccare! Continuate dritto da qui.',
+            'via-rondini': '🏠 Via delle Rondini\n\nCi siete quasi! Questa è Via delle Rondini, cercate il numero 170.',
+            'casa-festa': '🎉 Destinazione Raggiunta!\n\nEcco la casa della festa! Via delle Rondini 170. Benvenuti! 🎊'
+        };
+        
+        function activateStep(stepNumber) {
+            // Rimuovi classi precedenti
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Attiva step corrente
+            const step = document.querySelector(`[data-step="${stepNumber}"]`);
+            step.classList.add('active');
+            
+            // Marca come completati gli step precedenti
+            for (let i = 1; i < stepNumber; i++) {
+                document.querySelector(`[data-step="${i}"]`).classList.add('completed');
+            }
+            
+            // Aggiorna progress bar
+            const progress = (stepNumber / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            currentStep = stepNumber;
+            
+            if (guidedMode) {
+                updateGPSStatus(stepNumber);
+            }
+        }
+        
+        function startGuidedTour() {
+            guidedMode = true;
+            document.getElementById('gpsStatus').style.display = 'block';
+            currentStep = 1;
+            activateStep(1);
+            
+            // Simula il progresso automatico
+            setTimeout(() => {
+                if (guidedMode && currentStep < 5) {
+                    activateStep(currentStep + 1);
+                    setTimeout(() => {
+                        if (guidedMode && currentStep < 5) {
+                            activateStep(currentStep + 1);
+                        }
+                    }, 3000);
+                }
+            }, 2000);
+        }
+        
+        function resetProgress() {
+            guidedMode = false;
+            currentStep = 0;
+            document.getElementById('gpsStatus').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+            
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+        }
+        
+        function updateGPSStatus(step) {
+            const distanceInfo = document.getElementById('distanceInfo');
+            distanceInfo.textContent = stepDescriptions[step];
+            
+            if (step === 5) {
+                distanceInfo.innerHTML = stepDescriptions[step] + '<br><small>🎊 Sei arrivato alla festa!</small>';
+                setTimeout(() => {
+                    alert('🎉 Benvenuto alla festa! 🎊\n\nHai raggiunto Via delle Rondini 170!\nDivertiti! 🥳');
+                }, 1000);
+            }
+        }
+        
+        function showPhoto(photoId) {
+            const modal = document.getElementById('photoModal');
+            const content = document.getElementById('photoContent');
+            
+            content.innerHTML = `
+                <h2 style="color: #48cae4; margin-top: 0;">${photoDescriptions[photoId].split('\n\n')[0]}</h2>
+                <div style="font-size: 4em; text-align: center; margin: 20px 0;">
+                    ${getPhotoEmoji(photoId)}
+                </div>
+                <p style="line-height: 1.6; color: #666;">
+                    ${photoDescriptions[photoId].split('\n\n')[1] || 'Riferimento visivo per aiutarti a riconoscere questo punto del percorso.'}
+                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="control-btn" onclick="closeModal()">✅ Ho Capito!</button>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+        
+        function getPhotoEmoji(photoId) {
+            const emojis = {
+                'lungomare': '🌊🛣️🌅',
+                'via-tortore': '🛣️📍🚗',
+                'cartellone': '📋🔴⭐',
+                'stabilimento': '🏖️🏢🌊',
+                'cancellone': '🚪🔓⚡',
+                'sbarra': '🚧⬆️⬇️',
+                'bivio': '↗️↙️🔄',
+                'strada-sinistra': '⬅️🛣️✅',
+                'via-rondini': '🏠📍🅿️',
+                'casa-festa': '🎉🎊🏡'
+            };
+            return emojis[photoId] || '📸';
+        }
+        
+        function showAllPhotos() {
+            alert('📸 Galleria Foto\n\n' + 
+                  'Clicca su qualsiasi foto placeholder (🌊, 📋, 🚪, etc.) ' +
+                  'per vedere i dettagli di quel punto del percorso!\n\n' +
+                  'Ogni step ha 2 foto di riferimento per aiutarti a orientarti.');
+        }
+        
+        function getDirections() {
+            const address = "Via delle Rondini 170, Tor San Lorenzo Marina di Ardea, RM";
+            const encodedAddress = encodeURIComponent(address);
+            window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
+        }
+        
+        function closeModal() {
+            document.getElementById('photoModal').style.display = 'none';
+        }
+        
+        // Chiudi modal cliccando fuori
+        window.onclick = function(event) {
+            const modal = document.getElementById('photoModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // Animazione di benvenuto
+        setTimeout(() => {
+            if (!guidedMode) {
+                const welcome = confirm('🎉 Benvenuto alla mappa interattiva!\n\n' +
+                                      '🚗 Vuoi iniziare la navigazione guidata?\n\n' +
+                                      'Ti guideremo passo dopo passo fino alla festa!');
+                if (welcome) {
+                    startGuidedTour();
+                }
+            }
+        }, 2000);
+    </script>
 </body>
 </html>
