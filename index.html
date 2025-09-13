@@ -3,739 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mappa Interattiva per la Festa</title>
+    <title>Calendario Settimanale</title>
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
         
         body {
-            margin: 0;
-            padding: 20px;
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #ff6b6b, #feca57, #48cae4, #06d6a0);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
         
         .header {
-            text-align: center;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            padding: 30px;
+            text-align: center;
         }
         
         .header h1 {
             font-size: 2.5em;
-            margin: 0;
-            animation: bounce 2s infinite;
+            margin-bottom: 10px;
+            font-weight: 300;
         }
         
-        .map-container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-width: 900px;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .destination {
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            color: white;
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 1.2em;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(255,107,107,0.3);
-            animation: pulse 3s infinite;
-        }
-        
-        .progress-bar {
-            background: #e9ecef;
-            height: 8px;
-            border-radius: 4px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #48cae4, #06d6a0);
-            width: 0%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        
-        .step {
-            display: block;
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 15px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-left: 5px solid #48cae4;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .step.active {
-            border-left-color: #06d6a0;
-            background: linear-gradient(135deg, #e8f5e8, #d4edda);
-            transform: translateX(10px);
-        }
-        
-        .step.completed {
-            border-left-color: #28a745;
-            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-        }
-        
-        .step:hover {
-            transform: translateY(-3px) translateX(5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-        
-        .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .step-number {
-            background: linear-gradient(135deg, #48cae4, #06d6a0);
-            color: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 20px;
-            flex-shrink: 0;
-            font-size: 1.1em;
-            box-shadow: 0 3px 8px rgba(72,202,228,0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .step.completed .step-number {
-            background: linear-gradient(135deg, #28a745, #20c997);
-        }
-        
-        .step.active .step-number {
-            animation: pulse-active 1.5s infinite;
-        }
-        
-        .step-title {
-            flex: 1;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        
-        .step-content {
-            padding-left: 60px;
-        }
-        
-        .highlight {
-            background: linear-gradient(135deg, #feca57, #ff9ff3);
-            color: #333;
-            padding: 3px 8px;
-            border-radius: 8px;
-            font-weight: bold;
-            display: inline-block;
-            margin: 2px;
-            box-shadow: 0 2px 5px rgba(254,202,87,0.3);
-        }
-        
-        .landmark {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            display: inline-block;
-            margin: 5px 0;
-            box-shadow: 0 3px 8px rgba(255,107,107,0.4);
-        }
-        
-        .photo-gallery {
+        .week-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 10px;
-            border: 2px dashed #48cae4;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0;
         }
         
-        .photo-placeholder {
-            height: 120px;
-            background: linear-gradient(45deg, #e9ecef, #f8f9fa);
-            border-radius: 10px;
+        .day-card {
+            padding: 25px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            border-right: 1px solid #f0f0f0;
+            min-height: 180px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .day-card:hover {
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+        
+        .day-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 2em;
-            border: 2px solid #dee2e6;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
         }
         
-        .photo-placeholder:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        .day-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
         }
         
-        .photo-placeholder::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: photo-shine 3s infinite;
+        .active-day .day-icon {
+            background: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
         
-        .interactive-controls {
+        .inactive-day .day-icon {
+            background: #ddd;
+        }
+        
+        .time-slot {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            margin: 8px 0;
+            font-size: 0.9em;
+            font-weight: 500;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .no-schedule {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .inactive-day {
+            opacity: 0.6;
+        }
+        
+        .active-day {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .summary {
+            background: #f8f9ff;
+            padding: 25px;
+            border-top: 3px solid #667eea;
+        }
+        
+        .summary h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .stats {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 30px 0;
+            gap: 30px;
             flex-wrap: wrap;
         }
         
-        .control-btn {
-            background: linear-gradient(135deg, #48cae4, #06d6a0);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 10px rgba(72,202,228,0.3);
-        }
-        
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(72,202,228,0.4);
-        }
-        
-        .control-btn:active {
-            transform: translateY(0);
-        }
-        
-        .gps-simulation {
-            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border: 2px solid #48cae4;
-        }
-        
-        .gps-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-weight: bold;
-            color: #48cae4;
-            margin-bottom: 15px;
-        }
-        
-        .gps-dot {
-            width: 12px;
-            height: 12px;
-            background: #48cae4;
-            border-radius: 50%;
-            animation: gps-pulse 2s infinite;
-        }
-        
-        .distance-info {
-            text-align: center;
+        .stat-item {
+            color: #666;
             font-size: 1.1em;
-            color: #666;
         }
         
-        .tips-section {
-            background: linear-gradient(135deg, #fff3cd, #ffeeba);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border-left: 5px solid #ffc107;
-        }
-        
-        .tips-title {
+        .stat-number {
+            color: #667eea;
             font-weight: bold;
-            color: #856404;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 1.3em;
         }
         
-        .tip-item {
-            margin: 8px 0;
-            color: #856404;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .weather-widget {
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            color: white;
-            padding: 15px;
-            border-radius: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-style: italic;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            max-width: 80%;
-            max-height: 80%;
-        }
-        
-        .close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 30px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes pulse-active {
-            0% { transform: scale(1); box-shadow: 0 3px 8px rgba(72,202,228,0.3); }
-            50% { transform: scale(1.1); box-shadow: 0 5px 15px rgba(72,202,228,0.6); }
-            100% { transform: scale(1); box-shadow: 0 3px 8px rgba(72,202,228,0.3); }
-        }
-        
-        @keyframes photo-shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
-        @keyframes gps-pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @media (max-width: 600px) {
-            .map-container {
-                padding: 20px;
-                margin: 0 10px;
-            }
-            
-            .header h1 {
-                font-size: 2em;
-            }
-            
-            .step-content {
-                padding-left: 0;
-                margin-top: 10px;
-            }
-            
-            .step-header {
+        @media (max-width: 768px) {
+            .week-grid {
                 flex-direction: column;
-                align-items: flex-start;
             }
             
-            .step-number {
-                margin-right: 0;
-                margin-bottom: 10px;
+            .day-card {
+                min-width: auto;
+                border-right: none;
+                border-bottom: 1px solid #f0f0f0;
+                min-height: 150px;
             }
             
-            .photo-gallery {
-                grid-template-columns: 1fr;
+            .day-name {
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+            
+            .day-icon {
+                margin-bottom: 0;
+                margin-right: 8px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎉 Mappa Interattiva per la Festa! 🎈</h1>
-        <p>Tor San Lorenzo Marina di Ardea</p>
-    </div>
-    
-    <div class="map-container">
-        <div class="destination">
-            <span style="font-size: 1.5em;">🎯</span>
-            <strong>DESTINAZIONE: Via delle Rondini 170</strong>
-            <span style="font-size: 1.5em;">🎯</span>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Calendario Settimanale</h1>
+            <p>Il tuo programma della settimana</p>
         </div>
         
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        
-        <div class="interactive-controls">
-            <button class="control-btn" onclick="startGuidedTour()">🚗 Inizia Navigazione</button>
-            <button class="control-btn" onclick="resetProgress()">🔄 Reset</button>
-            <button class="control-btn" onclick="showAllPhotos()">📸 Vedi Info</button>
-            <button class="control-btn" onclick="getDirections()">🗺️ Google Maps</button>
-        </div>
-        
-        <div class="gps-simulation" id="gpsStatus" style="display: none;">
-            <div class="gps-status">
-                <div class="gps-dot"></div>
-                <span>GPS Attivo - Ti stiamo guidando!</span>
+        <div class="week-grid">
+            <div class="day-card active-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Lunedì
+                </div>
+                <div class="time-slot">10:00 - 13:00</div>
             </div>
-            <div class="distance-info" id="distanceInfo">
-                Preparati a partire...
+            
+            <div class="day-card active-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Martedì
+                </div>
+                <div class="time-slot">09:00 - 14:00</div>
+                <div class="time-slot">17:00 - 19:00</div>
+            </div>
+            
+            <div class="day-card inactive-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Mercoledì
+                </div>
+                <div class="no-schedule">Giorno libero</div>
+            </div>
+            
+            <div class="day-card active-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Giovedì
+                </div>
+                <div class="time-slot">09:00 - 12:00</div>
+                <div class="time-slot">16:00 - 19:00</div>
+            </div>
+            
+            <div class="day-card active-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Venerdì
+                </div>
+                <div class="time-slot">09:00 - 16:00</div>
+            </div>
+            
+            <div class="day-card inactive-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Sabato
+                </div>
+                <div class="no-schedule">Weekend</div>
+            </div>
+            
+            <div class="day-card inactive-day">
+                <div class="day-name">
+                    <span class="day-icon"></span>
+                    Domenica
+                </div>
+                <div class="no-schedule">Weekend</div>
             </div>
         </div>
         
-        <div class="weather-widget">
-            <div style="font-size: 1.2em; margin-bottom: 5px;">🌤️ Tempo oggi</div>
-            <div>Ideale per la festa! ☀️ 22°C</div>
-        </div>
-        
-        <div class="step" data-step="1" onclick="activateStep(1)">
-            <div class="step-header">
-                <div class="step-number">1</div>
-                <div class="step-title">Lungomare Tor San Lorenzo</div>
-            </div>
-            <div class="step-content">
-                Arrivate al <span class="highlight">lungomare Tor San Lorenzo</span>, 
-                in direzione di <span class="highlight">Via delle Tortore</span>
-                
-                <div class="photo-gallery">
-                    <div class="photo-placeholder" onclick="showPhoto('lungomare')">
-                        🌊<br><small>Lungomare</small>
-                    </div>
-                    <div class="photo-placeholder" onclick="showPhoto('via-tortore')">
-                        🛣️<br><small>Via Tortore</small>
-                    </div>
+        <div class="summary">
+            <h3>📊 Riepilogo Settimanale</h3>
+            <div class="stats">
+                <div class="stat-item">
+                    Giorni attivi: <span class="stat-number">4</span>
+                </div>
+                <div class="stat-item">
+                    Ore totali: <span class="stat-number">21</span>
+                </div>
+                <div class="stat-item">
+                    Giorni liberi: <span class="stat-number">3</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="step" data-step="2" onclick="activateStep(2)">
-            <div class="step-header">
-                <div class="step-number">2</div>
-                <div class="step-title">Cerca il Cartellone "ROMA"</div>
-            </div>
-            <div class="step-content">
-                All'inizio di <span class="highlight">Via delle Tortore</span>, troverete:<br>
-                <span class="landmark">📋 CARTELLONE ENORME "ROMA" (stabilimento)</span>
-                
-                <div class="photo-gallery">
-                    <div class="photo-placeholder" onclick="showPhoto('cartellone')">
-                        📋<br><small>Cartellone ROMA</small>
-                    </div>
-                    <div class="photo-placeholder" onclick="showPhoto('stabilimento')">
-                        🏖️<br><small>Stabilimento</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="step" data-step="3" onclick="activateStep(3)">
-            <div class="step-header">
-                <div class="step-number">3</div>
-                <div class="step-title">Cancellone e Sbarra</div>
-            </div>
-            <div class="step-content">
-                Scendete da quella via e troverete:<br>
-                <span class="highlight">🚪 Cancellone</span> → <span class="highlight">🚧 Sbarra</span>
-                
-                <div class="photo-gallery">
-                    <div class="photo-placeholder" onclick="showPhoto('cancellone')">
-                        🚪<br><small>Cancellone</small>
-                    </div>
-                    <div class="photo-placeholder" onclick="showPhoto('sbarra')">
-                        🚧<br><small>Sbarra</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="step" data-step="4" onclick="activateStep(4)">
-            <div class="step-header">
-                <div class="step-number">4</div>
-                <div class="step-title">Prima a Sinistra!</div>
-            </div>
-            <div class="step-content">
-                Superato il cancello e SOLAMENTE DOPO AVER SUPERATO la sbarra:<br>
-                <span class="highlight">⬅️ Prendete la PRIMA strada a SINISTRA</span>
-                
-                <div class="photo-gallery">
-                    <div class="photo-placeholder" onclick="showPhoto('bivio')">
-                        ↗️<br><small>Il Bivio</small>
-                    </div>
-                    <div class="photo-placeholder" onclick="showPhoto('strada-sinistra')">
-                        ⬅️<br><small>Strada a Sx</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="step" data-step="5" onclick="activateStep(5)">
-            <div class="step-header">
-                <div class="step-number">5</div>
-                <div class="step-title">Arrivo! 🎉</div>
-            </div>
-            <div class="step-content">
-                Continuate dritto fino a:<br>
-                <span class="highlight">🏠 Via delle Rondini 170</span>
-                
-                <div class="photo-gallery">
-                    <div class="photo-placeholder" onclick="showPhoto('via-rondini')">
-                        🏠<br><small>Via Rondini</small>
-                    </div>
-                    <div class="photo-placeholder" onclick="showPhoto('casa-festa')">
-                        🎉<br><small>Casa Festa!</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tips-section">
-            <div class="tips-title">
-                💡 Consigli Utili
-            </div>
-            <div class="tip-item">🚗 Parcheggiate con attenzione vicino alle case</div>
-            <div class="tip-item">🏠 Cercate di arrivare per le 20:00 </div>
-            <div class="tip-item">🚧 SE INCONTRATE UN CONTROLLORE ALLA SBARRA, DITEGLI:</div>
-            <div class="tip-item"> "stiamo con TRIONFETTI / ORSINI 🎈" e incrociate le dita</div>
-        </div>
-        
-        <div class="footer">
-            <p><strong>🥳 Non vedo l'ora di festeggiare con voi! 🎈</strong></p>
-            <p>💝 Seguite le indicazioni e ci vediamo alla festa! 💝</p>
         </div>
     </div>
-    
-    <!-- Modal per le foto -->
-    <div id="photoModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <div id="photoContent"></div>
-        </div>
-    </div>
-    
-    <script>
-        let currentStep = 0;
-        let guidedMode = false;
-        
-        const stepDescriptions = [
-            "Preparati a partire!",
-            "Dirigiti verso il lungomare Tor San Lorenzo",
-            "Cerca il grande cartellone 'ROMA'",
-            "Attraversa cancellone e sbarra",
-            "Prendi la prima a sinistra",
-            "Sei arrivato! 🎉 Via delle Rondini 170"
-        ];
-        
-        const photoDescriptions = {
-            'lungomare': '🌊 Lungomare Tor San Lorenzo\n\nQuesto è il punto di partenza! Cerca le indicazioni per Via delle Tortore lungo questa strada costiera.',
-            'via-tortore': '🛣️ Via delle Tortore\n\nEcco dove dovete dirigervi dal lungomare. All\'inizio di questa via troverete il cartellone.',
-            'cartellone': '📋 Cartellone "ROMA"\n\nQuesto è il grande cartellone dello stabilimento "ROMA" che dovete cercare. È impossibile non vederlo!',
-            'stabilimento': '🏖️ Stabilimento Balneare\n\nLo stabilimento si trova proprio accanto al cartellone. Da qui dovete scendere verso il cancellone.',
-            'cancellone': '🚪 Il Cancellone\n\nPrimo ostacolo: questo cancellone. Probabilmente sarà aperto durante l\'orario della festa.',
-            'sbarra': '🚧 La Sbarra\n\nDopo il cancellone troverete questa sbarra. Una volta superata, cercate la prima strada a sinistra!',
-            'bivio': '↗️ Il Bivio Importante\n\nEcco il punto cruciale: dopo cancello e sbarra, questo è il bivio dove dovete girare a sinistra.',
-            'strada-sinistra': '⬅️ Prima Strada a Sinistra\n\nQuesta è la strada che dovete imboccare! Continuate dritto da qui.',
-            'via-rondini': '🏠 Via delle Rondini\n\nCi siete quasi! Questa è Via delle Rondini, cercate il numero 170.',
-            'casa-festa': '🎉 Destinazione Raggiunta!\n\nEcco la casa della festa! Via delle Rondini 170. Benvenuti! 🎊'
-        };
-        
-        function activateStep(stepNumber) {
-            // Rimuovi classi precedenti
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active');
-            });
-            
-            // Attiva step corrente
-            const step = document.querySelector(`[data-step="${stepNumber}"]`);
-            step.classList.add('active');
-            
-            // Marca come completati gli step precedenti
-            for (let i = 1; i < stepNumber; i++) {
-                document.querySelector(`[data-step="${i}"]`).classList.add('completed');
-            }
-            
-            // Aggiorna progress bar
-            const progress = (stepNumber / 5) * 100;
-            document.getElementById('progressFill').style.width = progress + '%';
-            
-            currentStep = stepNumber;
-            
-            if (guidedMode) {
-                updateGPSStatus(stepNumber);
-            }
-        }
-        
-        function startGuidedTour() {
-            guidedMode = true;
-            document.getElementById('gpsStatus').style.display = 'block';
-            currentStep = 1;
-            activateStep(1);
-            
-            // Simula il progresso automatico
-            setTimeout(() => {
-                if (guidedMode && currentStep < 5) {
-                    activateStep(currentStep + 1);
-                    setTimeout(() => {
-                        if (guidedMode && currentStep < 5) {
-                            activateStep(currentStep + 1);
-                        }
-                    }, 3000);
-                }
-            }, 2000);
-        }
-        
-        function resetProgress() {
-            guidedMode = false;
-            currentStep = 0;
-            document.getElementById('gpsStatus').style.display = 'none';
-            document.getElementById('progressFill').style.width = '0%';
-            
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active', 'completed');
-            });
-        }
-        
-        function updateGPSStatus(step) {
-            const distanceInfo = document.getElementById('distanceInfo');
-            distanceInfo.textContent = stepDescriptions[step];
-            
-            if (step === 5) {
-                distanceInfo.innerHTML = stepDescriptions[step] + '<br><small>🎊 Sei arrivato alla festa!</small>';
-                setTimeout(() => {
-                    alert('🎉 Benvenuto alla festa! 🎊\n\nHai raggiunto Via delle Rondini 170!\nDivertiti! 🥳');
-                }, 1000);
-            }
-        }
-        
-        function showPhoto(photoId) {
-            const modal = document.getElementById('photoModal');
-            const content = document.getElementById('photoContent');
-            
-            content.innerHTML = `
-                <h2 style="color: #48cae4; margin-top: 0;">${photoDescriptions[photoId].split('\n\n')[0]}</h2>
-                <div style="font-size: 4em; text-align: center; margin: 20px 0;">
-                    ${getPhotoEmoji(photoId)}
-                </div>
-                <p style="line-height: 1.6; color: #666;">
-                    ${photoDescriptions[photoId].split('\n\n')[1] || 'Riferimento visivo per aiutarti a riconoscere questo punto del percorso.'}
-                </p>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="control-btn" onclick="closeModal()">✅ Ho Capito!</button>
-                </div>
-            `;
-            
-            modal.style.display = 'block';
-        }
-        
-        function getPhotoEmoji(photoId) {
-            const emojis = {
-                'lungomare': '🌊🛣️🌅',
-                'via-tortore': '🛣️📍🚗',
-                'cartellone': '📋🔴⭐',
-                'stabilimento': '🏖️🏢🌊',
-                'cancellone': '🚪🔓⚡',
-                'sbarra': '🚧⬆️⬇️',
-                'bivio': '↗️↙️🔄',
-                'strada-sinistra': '⬅️🛣️✅',
-                'via-rondini': '🏠📍🅿️',
-                'casa-festa': '🎉🎊🏡'
-            };
-            return emojis[photoId] || '📸';
-        }
-        
-        function showAllPhotos() {
-            alert('📸 Galleria Foto\n\n' + 
-                  'Clicca su qualsiasi foto placeholder (🌊, 📋, 🚪, etc.) ' +
-                  'per vedere i dettagli di quel punto del percorso!\n\n' +
-                  'Ogni step ha 2 foto di riferimento per aiutarti a orientarti.');
-        }
-        
-        function getDirections() {
-            const address = "Via delle Rondini 170, Tor San Lorenzo Marina di Ardea, RM";
-            const encodedAddress = encodeURIComponent(address);
-            window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
-        }
-        
-        function closeModal() {
-            document.getElementById('photoModal').style.display = 'none';
-        }
-        
-        // Chiudi modal cliccando fuori
-        window.onclick = function(event) {
-            const modal = document.getElementById('photoModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-        
-        // Animazione di benvenuto
-        setTimeout(() => {
-            if (!guidedMode) {
-                const welcome = confirm('🎉 Benvenuto alla mappa interattiva!\n\n' +
-                                      '🚗 Vuoi iniziare la navigazione guidata?\n\n' +
-                                      'Ti guideremo passo dopo passo fino alla festa!');
-                if (welcome) {
-                    startGuidedTour();
-                }
-            }
-        }, 2000);
-    </script>
 </body>
 </html>
